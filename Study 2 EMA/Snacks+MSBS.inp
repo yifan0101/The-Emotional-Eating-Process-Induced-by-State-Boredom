@@ -1,0 +1,44 @@
+ DATA: FILE IS data1.dat;
+
+  VARIABLE:
+    NAMES = Sub	foodcraving	Intention_behavior	Intention_by_eating	emotional_change 
+    S	CD	B	CH	M	FR	N	Y	D	I	O	Day	Time_in MSBS Snack	DEBQ	prone	EIS	id	time;
+
+    USEVARIABLES = id MSBS snack DEBQ;
+    !TINTERVAL = time(1);
+    !IDVARIABLE = id;
+   ! Specify the CLUSTER variable
+    CLUSTER = id;!within
+    LAGGED= MSBS(1)  snack(1);
+
+  ANALYSIS:
+    TYPE = TWOLEVEL RANDOM;
+    ESTIMATOR = BAYES;
+    BITERATIONS = (2000);!Run at least 1000 iteration of the MCMC algorithm;
+    PROCESS = 4;  ! Adjust for your computer's capability
+
+  MODEL:
+    %WITHIN%
+      a1| MSBS ON MSBS&1;
+      a2|  snack on  snack&1;
+      c1 | MSBS ON  snack&1; 
+      c2 | snack ON MSBS&1;
+
+    %BETWEEN%
+      MSBS;
+      snack;
+      a1 on DEBQ;
+      a2 on DEBQ;
+      c1 on DEBQ;
+      c2 on DEBQ;
+      MSBS WITH  snack;
+
+      [MSBS];
+      ![D$1];
+      [a1];
+      [a2];
+      [c1];
+      [c2];
+
+
+  OUTPUT: TECH1 TECH8 STDYX STANDARDIZED;
