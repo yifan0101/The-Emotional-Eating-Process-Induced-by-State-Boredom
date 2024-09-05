@@ -1,0 +1,56 @@
+! final model, please use this model, this model does not allow random parameters, it is simple and easy to interpret. 
+
+DATA: 
+   FILE IS cleandata_mplus.csv;
+
+VARIABLE:
+   NAMES = id time Inten LGCal MSBS;
+   USEVARIABLES = id MSBS LGCal Inten;
+   TINTERVAL = time(1);
+   CLUSTER = id;
+   LAGGED= MSBS(1)  LGCal(1)  Inten(1);
+
+ANALYSIS:
+   TYPE = TWOLEVEL RANDOM;
+   ESTIMATOR = BAYES;
+   PROCESS = 2;  ! Adjust for your computer's capability 
+   BITERATIONS = (5000);!Run at least 1000 iteration of the MCMC algorithm;   
+   !fbiter = 10000; ! forced number of iteration. final burn-in : 5000 iterations per chain
+   bseed = 7; ! random starting number for chain one to make the results replicable     from 1-20, the seed 7,18,17 is the best
+   !thin = 100; ! only the results of every 500th iteration is saved to reduce autoregression
+
+MODEL:
+    %WITHIN%
+      
+      MSBS ON MSBS&1;
+      LGCal on  LGCal&1;
+      Inten on Inten&1;
+      
+      LGCal ON Inten (a);
+      MSBS ON  LGCal (b); 
+      MSBS ON  Inten;
+      
+      Inten on LGCal&1;
+      Inten on MSBS&1;
+      LGCal on MSBS&1;
+      
+
+    %BETWEEN%
+      MSBS;
+      LGCal;
+      inten;
+      
+      MSBS WITH  LGCal;
+      MSBS WITH Inten;
+      LGCal with Inten;
+
+      [MSBS];
+      [LGCal];
+      [Inten];
+
+      MODEL CONSTRAINT:
+      NEW(ind); 
+      ind=a*b;
+
+OUTPUT: TECH1 TECH8 STDYX STANDARDIZED stand(cluster);
+  ! PLOT: TYPE = PLOT2; ! creates trace plots and autocorrelation plots
